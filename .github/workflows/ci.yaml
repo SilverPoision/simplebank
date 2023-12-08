@@ -17,7 +17,7 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_PASSWORD: silver
+          POSTGRES_PASSWORD: secret
           POSTGRES_USERNAME: root
         ports:
           - 5432:5432
