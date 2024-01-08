@@ -6,20 +6,22 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Silverpoision/simple_bank/util"
 	_ "github.com/lib/pq"
 )
 
 var testqueries *Queries
 var testDb *sql.DB
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:silver@localhost:5432/simple_bank?sslmode=disable"
-)
-
 func TestMain(m *testing.M) {
-	var err error
-	testDb, err = sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig("../..")
+
+	if err != nil {
+		log.Fatal("error parsing config", err)
+		return
+	}
+
+	testDb, err = sql.Open(config.DBDriver, config.DBSource)
 
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
