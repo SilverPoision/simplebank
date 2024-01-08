@@ -6,19 +6,24 @@ import (
 	"fmt"
 )
 
-type Store struct {
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTXParams) (TransferTxResult, error)
+}
+
+type SqlStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SqlStore{
 		Queries: New(db),
 		db:      db,
 	}
 }
 
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SqlStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -28,7 +33,7 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 
 	if err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
-			fmt.Errorf("tx error: %v, rb error %v", err, rbErr)
+			fmt.Printf("tx error: %v, rb error %v", err, rbErr)
 		}
 		return err
 	}
@@ -49,7 +54,7 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
-func (store *Store) TransferTx(ctx context.Context, arg TransferTXParams) (TransferTxResult, error) {
+func (store *SqlStore) TransferTx(ctx context.Context, arg TransferTXParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
@@ -80,7 +85,6 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTXParams) (Trans
 		if err != nil {
 			return err
 		}
-		//Todo update account balance
 
 		if arg.FromAccountID < arg.ToAccountID {
 			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)

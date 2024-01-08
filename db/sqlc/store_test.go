@@ -16,7 +16,7 @@ func TestTransferTx(t *testing.T) {
 
 	fmt.Println(">> before:", account1.Balance, account2.Balance)
 
-	n := 5
+	n := 6
 	amount := int64(10)
 
 	errs := make(chan error)
